@@ -8,6 +8,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-main: #0B1D51;
+  --color-purple: #725CAD;
+  --color-sky: #8CCDEB;
+  --color-skin: #FFE3A9;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -19,8 +23,19 @@
   }
 }
 
+* {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+input {
+  color: black !important;
+}
+
+.popup-shadow {
+  box-shadow: 10px 10px 10px -10px #725CAD;
 }
