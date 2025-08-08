@@ -12,13 +12,12 @@ import API from '@/apis/init';
 const CochesPage = () => {
     // Sample data
     const [users, setUsers] = useState([]);
+    const [deleted, setDeleted] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
             apiService.get(API.USERS.GET.BY_STATE+`/active?type=coach`)
-                .then(res => {
-                    console.log(res.data.users);
-                    
+                .then(res => {                    
                     setUsers(res.data.users)                    
                 })
                 .catch(err => {
@@ -27,7 +26,7 @@ const CochesPage = () => {
         }
 
         fetchData();
-    }, [])
+    }, [deleted])
 
     // Table columns configuration
     const userColumns = [
@@ -47,13 +46,19 @@ const CochesPage = () => {
 
     // Action handlers
     const handleAddNew = () => {
-        router.push("/admin/users/add")
+        router.push("/admin/coaches/add")
     };
 
-    const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this item?')) {
-        setUsers(users.filter(user => user.id !== id));
-        }
+    const handleDelete = (item) => {
+        const id = item._user._id;
+
+        apiService.delete(API.USERS.DELETE.COACH+id)
+            .then(res => {
+                setDeleted(!deleted)
+            })
+            .catch(err => {
+                console.log(err);
+            })
     };
 
     const handleBulkDelete = (ids) => {
@@ -67,7 +72,7 @@ const CochesPage = () => {
     };
 
     const handleView = (item) => {
-        alert(`Viewing details for: ${item.name}`);
+        router.push(`/admin/coaches/${item._user._id}`)
     };
 
     return (
@@ -83,6 +88,8 @@ const CochesPage = () => {
                 onEdit={handleEdit}
                 onView={handleView}
                 onBulkDelete={handleBulkDelete}
+                selected={false}
+                edited={false}
             />
         </div>
     );

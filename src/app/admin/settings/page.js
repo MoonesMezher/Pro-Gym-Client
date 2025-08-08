@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from 'react';
+import API from '@/apis/init';
+import apiService from '@/apis/services';
+import { usePermissions } from '@/hooks/usePermissions';
+import { toast } from '@/providers/ToastProvider';
+import useAuthStore from '@/store/auth.store';
+import { useState, useEffect } from 'react';
 import { FaUserPlus, FaEdit, FaTrash, FaSignOutAlt, FaLock, FaBell, FaGlobe, FaSave } from 'react-icons/fa';
 
 const SettingsPage = () => {
   // Supervisor management state
-    const [supervisors, setSupervisors] = useState([
-        { id: 1, name: 'Alex Johnson', email: 'alex@progym.com', role: 'Manager', status: 'Active' },
-        { id: 2, name: 'Sarah Williams', email: 'sarah@progym.com', role: 'Supervisor', status: 'Active' },
-        { id: 3, name: 'Michael Chen', email: 'michael@progym.com', role: 'Trainer', status: 'Inactive' },
-    ]);
+    const [supervisors, setSupervisors] = useState([]);
+    const [updated, setUpdated] = useState(false);
+    
+    useEffect(() => {
+        const fetchData = async () => {
+            apiService.get(API.USERS.GET.SUPERVISORS)
+                .then(res => {                                        
+                    setSupervisors(res.data.users)                    
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        }
+
+        fetchData();
+    }, [updated])
     
     // Form state
-    const [newSupervisor, setNewSupervisor] = useState({ name: '', email: '', role: 'Supervisor', status: 'Active' });
+    const [newSupervisor, setNewSupervisor] = useState({ name: '', email: '', password: '' });
     const [notificationPrefs, setNotificationPrefs] = useState({
         email: true,
         sms: false,
@@ -27,39 +43,57 @@ const SettingsPage = () => {
         timezone: 'GMT+04:00'
     });
 
+    const { justAdmin } = usePermissions()
+
     // Add new supervisor
     const handleAddSupervisor = () => {
-        if (newSupervisor.name && newSupervisor.email) {
-        const newSupervisorWithId = {
-            ...newSupervisor,
-            id: supervisors.length + 1
-        };
-        setSupervisors([...supervisors, newSupervisorWithId]);
-        setNewSupervisor({ name: '', email: '', role: 'Supervisor', status: 'Active' });
-        }
+        apiService.post(API.USERS.POST.ADD_SUPERVISOR, newSupervisor)
+            .then(res => {
+                setUpdated(!updated)
+            })
+            .catch(err => {
+                if(Array.isArray(err?.response?.data?.errors)) {
+                    toast.error("Error", {
+                        description: err?.response?.data?.errors[0]
+                    })
+                } else {
+                    toast.error("Error", {
+                        description: err?.response?.data?.message || "Error"
+                    })
+                }
+            })
     };
 
     // Delete supervisor
     const handleDeleteSupervisor = (id) => {
-        setSupervisors(supervisors.filter(supervisor => supervisor.id !== id));
+        apiService.delete(API.USERS.DELETE.SUPERVISOR+id)
+            .then(res => {
+                setUpdated(!updated);
+            })
+            .catch(err => {
+                toast.error("Error", {
+                    description: err?.response?.data?.message || "Error"
+                })
+            })
     };
 
-    // Toggle supervisor status
-    const toggleStatus = (id) => {
-        setSupervisors(supervisors.map(supervisor => 
-        supervisor.id === id 
-            ? { 
-                ...supervisor, 
-                status: supervisor.status === 'Active' ? 'Inactive' : 'Active' 
-            } 
-            : supervisor
-        ));
-    };
+    const { logout } = useAuthStore();
 
     // Logout function
     const handleLogout = () => {
-        alert('Logging out...');
-        // In a real app, you would redirect to logout or clear session
+        logout()
+            .then(res => {
+                toast.success("Success", {
+                    description: res?.message || "Success"
+                });
+
+                window.location.href = "/";
+            })
+            .catch(err => {
+                toast.error("Error", {
+                    description: err?.message || err || "Error"
+                });
+            });
     };
 
     return (
@@ -68,13 +102,13 @@ const SettingsPage = () => {
             {/* Page Header */}
             <div className="bg-white rounded-xl shadow-lg p-6">
             <h1 className="text-3xl font-bold text-[#0B1D51]">Settings</h1>
-            <p className="text-[#725CAD] mt-2">Manage your account and system preferences</p>
+            <p className="text-a[#725CAD] mt-2">Manage your account and system preferences</p>
             </div>
 
             {/* Main Settings Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Supervisor Management */}
-            <div className="lg:col-span-2 space-y-6">
+            {justAdmin() && <div className="lg:col-span-2 space-y-6">
                 {/* Add New Supervisor */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -93,44 +127,32 @@ const SettingsPage = () => {
                         onChange={(e) => setNewSupervisor({...newSupervisor, name: e.target.value})}
                         className="w-full p-3 border border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent"
                         placeholder="Enter full name"
+                        required
                     />
                     </div>
                     
                     <div>
-                    <label className="block text-sm font-medium text-[#0B1D51] mb-1">Email Address</label>
-                    <input
-                        type="email"
-                        value={newSupervisor.email}
-                        onChange={(e) => setNewSupervisor({...newSupervisor, email: e.target.value})}
-                        className="w-full p-3 border border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent"
-                        placeholder="Enter email address"
-                    />
+                        <label className="block text-sm font-medium text-[#0B1D51] mb-1">Email Address</label>
+                        <input
+                            type="email"
+                            value={newSupervisor.email}
+                            onChange={(e) => setNewSupervisor({...newSupervisor, email: e.target.value})}
+                            className="w-full p-3 border border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent"
+                            placeholder="Enter email address"
+                            required
+                        />
                     </div>
-                    
+
                     <div>
-                    <label className="block text-sm font-medium text-[#0B1D51] mb-1">Role</label>
-                    <select
-                        value={newSupervisor.role}
-                        onChange={(e) => setNewSupervisor({...newSupervisor, role: e.target.value})}
-                        className="w-full p-3 border border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent"
-                    >
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Trainer">Trainer</option>
-                        <option value="Support">Support</option>
-                    </select>
-                    </div>
-                    
-                    <div>
-                    <label className="block text-sm font-medium text-[#0B1D51] mb-1">Status</label>
-                    <select
-                        value={newSupervisor.status}
-                        onChange={(e) => setNewSupervisor({...newSupervisor, status: e.target.value})}
-                        className="w-full p-3 border border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent"
-                    >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
+                        <label className="block text-sm font-medium text-[#0B1D51] mb-1">Password</label>
+                        <input
+                            type="password"
+                            value={newSupervisor.password}
+                            onChange={(e) => setNewSupervisor({...newSupervisor, password: e.target.value})}
+                            className="w-full p-3 border border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent"
+                            placeholder="Enter password"
+                            required
+                        />
                     </div>
                 </div>
                 
@@ -158,39 +180,23 @@ const SettingsPage = () => {
                     <table className="w-full">
                     <thead>
                         <tr className="bg-[#FFE3A9]">
-                        <th className="p-4 text-left text-[#0B1D51] font-semibold">Name</th>
-                        <th className="p-4 text-left text-[#0B1D51] font-semibold">Email</th>
-                        <th className="p-4 text-left text-[#0B1D51] font-semibold">Role</th>
-                        <th className="p-4 text-left text-[#0B1D51] font-semibold">Status</th>
-                        <th className="p-4 text-right text-[#0B1D51] font-semibold">Actions</th>
+                            <th className="p-4 text-left text-[#0B1D51] font-semibold">Name</th>
+                            <th className="p-4 text-left text-[#0B1D51] font-semibold">Email</th>
+                            <th className="p-4 text-left text-[#0B1D51] font-semibold">Created At</th>
+                            <th className="p-4 text-right text-[#0B1D51] font-semibold">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {supervisors.map((supervisor) => (
-                        <tr key={supervisor.id} className="border-b">
-                            <td className="p-4 font-medium">{supervisor.name}</td>
-                            <td className="p-4 text-[#725CAD]">{supervisor.email}</td>
-                            <td className="p-4">{supervisor.role}</td>
-                            <td className="p-4">
-                            <span 
-                                onClick={() => toggleStatus(supervisor.id)}
-                                className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer ${
-                                supervisor.status === 'Active' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                            >
-                                {supervisor.status}
-                            </span>
-                            </td>
+                        <tr key={supervisor._id} className="border-b">
+                            <td className="p-4 font-medium text-black">{supervisor.name}</td>
+                            <td className="p-4 text-black">{supervisor.email}</td>
+                            <td className="p-4 text-black">{supervisor.createdAt.split("T")[0]}</td>
                             <td className="p-4">
                             <div className="flex justify-end space-x-2">
-                                <button className="p-2 text-[#725CAD] hover:bg-[#725CAD]/20 rounded-full">
-                                <FaEdit />
-                                </button>
                                 <button 
-                                onClick={() => handleDeleteSupervisor(supervisor.id)}
-                                className="p-2 text-red-500 hover:bg-red-500/20 rounded-full"
+                                    onClick={() => handleDeleteSupervisor(supervisor._id)}
+                                    className="p-2 text-red-500 hover:bg-red-500/20 rounded-full"
                                 >
                                 <FaTrash />
                                 </button>
@@ -208,65 +214,65 @@ const SettingsPage = () => {
                     </div>
                 )}
                 </div>
-            </div>
+            </div>}
             
             {/* Right Column - Other Settings */}
             <div className="space-y-6">
                 {/* Security Settings */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-[#0B1D51]">Security Settings</h2>
-                    <div className="bg-[#8CCDEB] p-2 rounded-lg">
-                    <FaLock className="text-[#0B1D51]" />
-                    </div>
-                </div>
-                
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="font-medium text-[#0B1D51]">Two-Factor Authentication</h3>
-                        <p className="text-sm text-gray-500">Add an extra layer of security</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                        type="checkbox" 
-                        checked={securitySettings.twoFactor}
-                        onChange={() => setSecuritySettings({...securitySettings, twoFactor: !securitySettings.twoFactor})}
-                        className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#725CAD]"></div>
-                    </label>
+                {justAdmin() && <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-[#0B1D51]">Security Settings</h2>
+                        <div className="bg-[#8CCDEB] p-2 rounded-lg">
+                        <FaLock className="text-[#0B1D51]" />
+                        </div>
                     </div>
                     
-                    <div className="pt-4 border-t border-gray-100">
-                    <h3 className="font-medium text-[#0B1D51] mb-2">Auto Logout</h3>
-                    <p className="text-sm text-gray-500 mb-3">Set time for automatic logout</p>
-                    <div className="flex items-center space-x-3">
-                        {[15, 30, 60].map((time) => (
-                        <button
-                            key={time}
-                            onClick={() => setSecuritySettings({...securitySettings, autoLogout: time})}
-                            className={`px-4 py-2 rounded-lg ${
-                            securitySettings.autoLogout === time
-                                ? 'bg-[#725CAD] text-white'
-                                : 'bg-[#FFE3A9] text-[#0B1D51]'
-                            }`}
-                        >
-                            {time} min
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-medium text-[#0B1D51]">Two-Factor Authentication</h3>
+                            <p className="text-sm text-gray-500">Add an extra layer of security</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                            type="checkbox" 
+                            checked={securitySettings.twoFactor}
+                            onChange={() => setSecuritySettings({...securitySettings, twoFactor: !securitySettings.twoFactor})}
+                            className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#725CAD]"></div>
+                        </label>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-gray-100">
+                        <h3 className="font-medium text-[#0B1D51] mb-2">Auto Logout</h3>
+                        <p className="text-sm text-gray-500 mb-3">Set time for automatic logout</p>
+                        <div className="flex items-center space-x-3">
+                            {[15, 30, 60].map((time) => (
+                            <button
+                                key={time}
+                                onClick={() => setSecuritySettings({...securitySettings, autoLogout: time})}
+                                className={`px-4 py-2 rounded-lg ${
+                                securitySettings.autoLogout === time
+                                    ? 'bg-[#725CAD] text-white'
+                                    : 'bg-[#FFE3A9] text-[#0B1D51]'
+                                }`}
+                            >
+                                {time} min
+                            </button>
+                            ))}
+                        </div>
+                        </div>
+                        
+                        <button className="mt-4 w-full flex items-center justify-center px-4 py-3 bg-[#0B1D51] hover:bg-[#0a1640] text-white rounded-lg transition">
+                        <FaSave className="mr-2" />
+                        Save Security Settings
                         </button>
-                        ))}
                     </div>
-                    </div>
-                    
-                    <button className="mt-4 w-full flex items-center justify-center px-4 py-3 bg-[#0B1D51] hover:bg-[#0a1640] text-white rounded-lg transition">
-                    <FaSave className="mr-2" />
-                    Save Security Settings
-                    </button>
-                </div>
-                </div>
+                </div>}
                 
                 {/* Notification Settings */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
+                {justAdmin() && <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-[#0B1D51]">Notification Preferences</h2>
                     <div className="bg-[#8CCDEB] p-2 rounded-lg">
@@ -328,10 +334,10 @@ const SettingsPage = () => {
                     Save Notification Settings
                     </button>
                 </div>
-                </div>
+                </div>}
                 
                 {/* General Settings */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
+                {justAdmin() && <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-[#0B1D51]">General Settings</h2>
                     <div className="bg-[#8CCDEB] p-2 rounded-lg">
@@ -373,7 +379,7 @@ const SettingsPage = () => {
                     Save General Settings
                     </button>
                 </div>
-                </div>
+                </div>}
                 
                 {/* Logout Section */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
@@ -384,18 +390,10 @@ const SettingsPage = () => {
                     </div>
                 </div>
                 
-                <div className="space-y-4">
-                    <button className="w-full flex items-center justify-center px-4 py-3 bg-[#FFE3A9] hover:bg-[#e6cc98] text-[#0B1D51] rounded-lg transition">
-                    Change Password
-                    </button>
-                    
-                    <button className="w-full flex items-center justify-center px-4 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition">
-                    Update Profile
-                    </button>
-                    
+                <div className="space-y-4">                    
                     <button 
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition mt-6"
+                    className="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition mt-6 cursor-pointer"
                     >
                     <FaSignOutAlt className="mr-2" />
                     Logout

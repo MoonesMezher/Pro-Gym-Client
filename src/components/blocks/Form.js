@@ -3,11 +3,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaSave, FaTimes, FaUpload } from 'react-icons/fa';
+import KeyValueArrayField from '@/components/blocks/KeyValueArrayField'
 
 const Form = ({
     title,
-    initialData = {},
+    initialData = [],
     onSubmit,
+    onFileSubmit,
     fields,
     cancelButton = true,
     onCancel,
@@ -19,40 +21,53 @@ const Form = ({
     formWidth = "full",
     buttonAlignment = "right",
     showHeader = true,
-    showBorder = true
+    showBorder = true,
 }) => {
     const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
         defaultValues: initialData
     });
     
-    const [filePreviews, setFilePreviews] = useState({});
+    const [filePreviews, setFilePreviews] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Handle file input changes
     const handleFileChange = (e, fieldName) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (files.length === 0 || !files) return;
         
         // Set value for react-hook-form
-        setValue(fieldName, file);
+        setFilePreviews([]);
+
+        const filesArray = Array.from(files)
+
+        console.log(11, filesArray);
         
-        // Create preview for images
-        if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setFilePreviews(prev => ({ ...prev, [fieldName]: e.target.result }));
-        };
-        reader.readAsDataURL(file);
+
+        onFileSubmit(filesArray)
+        
+        for (let index = 0; index < files.length; index++) {
+            const file = files[index];
+            
+            // Create preview for images            
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {                    
+                    setFilePreviews(prev => [...prev, e.target.result]);
+                };
+                reader.readAsDataURL(file);
+            }            
         }
+
+        setValue(fieldName, filesArray);
     };
     
     // Handle form submission
-    const onSubmitHandler = async (data) => {
+    const onSubmitHandler = async (data) => {        
         setIsSubmitting(true);
         try {
             await onSubmit(data);
-        } catch (error) {
-            console.error("Form submission error:", error);
+        } catch (err) {
+            console.error("Form submission error:", err);
         } finally {
             setIsSubmitting(false);
         }
@@ -81,19 +96,20 @@ const Form = ({
                 >
                 {field.type !== 'hidden' && (
                     <label htmlFor={field.name} className="block text-sm font-medium text-[#0B1D51] mb-2">
-                    {field.label} {field.required && <span className="text-red-500">*</span>}
+                        {field.label} {field.required && <span className="text-red-500">*</span>}
                     </label>
                 )}
                 
                 {/* Text Input */}
                 {field.type === 'text' && (
                     <input
-                    id={field.name}
-                    type="text"
-                    className={`w-full p-3 border ${errors[field.name] ? 'border-red-500' : 'border-[#725CAD]/30'} rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent`}
-                    placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
-                    {...register(field.name, field.validation)}
-                    disabled={isSubmitting}
+                        id={field.name}
+                        type={field.textType}
+                        className={`w-full p-3 border ${errors[field.name] ? 'border-red-500' : 'border-[#725CAD]/30'} rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent`}
+                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                        defaultValue={field.value}
+                        {...register(field.name, field.validation)}
+                        disabled={isSubmitting}
                     />
                 )}
                 
@@ -106,21 +122,22 @@ const Form = ({
                     rows={field.rows || 4}
                     {...register(field.name, field.validation)}
                     disabled={isSubmitting}
+                    defaultValue={field.value}
                     />
                 )}
                 
                 {/* Select */}
                 {field.type === 'select' && (
                     <select
-                    id={field.name}
-                    className={`w-full p-3 border ${errors[field.name] ? 'border-red-500' : 'border-[#725CAD]/30'} rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent`}
-                    {...register(field.name, field.validation)}
-                    disabled={isSubmitting}
+                        id={field.name}
+                        className={`w-full p-3 border ${errors[field.name] ? 'border-red-500' : 'border-[#725CAD]/30'} rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent text-black placeholder:text-black`}
+                        {...register(field.name, field.validation)}
+                        disabled={isSubmitting}
                     >
-                    <option value="">Select {field.label}</option>
+                    <option value="" className='text-black'>Select {field.label}</option>
                     {field.options.map((option) => (
-                        <option key={option.value} value={option.value}>
-                        {option.label}
+                        <option key={option.value} value={option.value} className='text-black'>
+                            {option.label}
                         </option>
                     ))}
                     </select>
@@ -146,6 +163,7 @@ const Form = ({
                         <input
                             id={field.name}
                             type="file"
+                            multiple={true}
                             className="hidden"
                             accept={field.accept}
                             onChange={(e) => handleFileChange(e, field.name)}
@@ -155,32 +173,34 @@ const Form = ({
                     </div>
                     
                     {/* File preview */}
-                    {filePreviews[field.name] && (
-                        <div className="mt-4">
-                        <p className="text-sm font-medium text-[#0B1D51] mb-2">Preview:</p>
-                        {field.accept?.startsWith('image/') ? (
-                            <img 
-                            src={filePreviews[field.name]} 
-                            alt="Preview" 
-                            className="max-w-xs max-h-40 rounded-lg border border-[#725CAD]/20"
-                            />
-                        ) : (
-                            <div className="p-3 bg-[#FFE3A9]/20 rounded-lg border border-[#725CAD]/20">
-                            File selected
-                            </div>
-                        )}
-                        </div>
-                    )}
+                    {filePreviews.length > 0 && <p className="text-sm font-medium text-[#0B1D51] my-2">Preview:</p>}
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                        {filePreviews.map((file,i) => (<div key={i} className="">
+                                {field.accept?.startsWith('image/') ? (
+                                    <img 
+                                    src={file} 
+                                    alt={`Preview ${i + 1}`} 
+                                    className="max-w-xs max-h-40 rounded-lg border border-[#725CAD]/20 w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="p-3 bg-[#FFE3A9]/20 rounded-lg border border-[#725CAD]/20">
+                                    File selected
+                                    </div>
+                                )}
+                            </div>))}
+                    </div>
+
                     
                     {/* Existing file */}
-                    {initialData[field.name] && !filePreviews[field.name] && (
-                        <div className="mt-4">
-                        <p className="text-sm font-medium text-[#0B1D51] mb-2">Current file:</p>
-                        <div className="p-3 bg-[#FFE3A9]/20 rounded-lg border border-[#725CAD]/20">
-                            {initialData[field.name]}
-                        </div>
-                        </div>
-                    )}
+                    {initialData && initialData?.length > 0 && <h3 className="text-sm font-medium text-[#0B1D51] my-2">Current:</h3>}
+                    <div className="grid grid-cols-3 gap-2 w-full mt-4">
+                    {initialData && initialData?.length > 0 && initialData?.map((file,i) => <img 
+                            key={i}
+                            src={"http://localhost:4000/"+file} 
+                            alt={`Current ${i + 1}`} 
+                            className="max-w-xs max-h-40 rounded-lg border border-[#725CAD]/20 w-full h-full object-cover"
+                        />)}
+                    </div>
                     </div>
                 )}
                 
@@ -195,9 +215,21 @@ const Form = ({
                         disabled={isSubmitting}
                     />
                     <label htmlFor={field.name} className="ml-2 block text-sm text-[#0B1D51]">
-                        {field.label}
+                        {field.label + ""}
                     </label>
                     </div>
+                )}
+
+                {/* keyValueArray */}
+                {field.type === 'keyValueArray' && (
+                    <KeyValueArrayField
+                        field={field}
+                        register={register}
+                        setValue={setValue}
+                        errors={errors}
+                        initialData={field.value}
+                        isSubmitting={isSubmitting}
+                    />
                 )}
                 
                 {/* Error message */}
@@ -223,7 +255,7 @@ const Form = ({
                 <button
                 type="button"
                 onClick={handleCancel}
-                className="flex items-center px-6 py-3 bg-gray-200 text-[#0B1D51] hover:bg-gray-300 rounded-lg transition"
+                className="flex items-center px-6 py-3 bg-gray-200 text-[#0B1D51] hover:bg-gray-300 rounded-lg transition cursor-pointer"
                 disabled={isSubmitting}
                 >
                 {cancelButtonIcon && <span className="mr-2">{cancelButtonIcon}</span>}
@@ -233,7 +265,7 @@ const Form = ({
             
             <button
                 type="submit"
-                className="flex items-center px-6 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition"
+                className="flex items-center px-6 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition cursor-pointer"
                 disabled={isSubmitting}
             >
                 {submitButtonIcon && <span className="mr-2">{submitButtonIcon}</span>}

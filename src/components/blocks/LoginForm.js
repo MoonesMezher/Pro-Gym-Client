@@ -3,6 +3,7 @@
 import { toast } from '@/providers/ToastProvider';
 import useAuthStore from '@/store/auth.store';
 import getRedirect from '@/utils/redirect';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaSignInAlt } from 'react-icons/fa';
@@ -17,6 +18,8 @@ const LoginForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { login } = useAuthStore()
+
+    const router = useRouter();
         
     const onSubmit = async (data) => {
         setIsSubmitting(true);
@@ -25,7 +28,9 @@ const LoginForm = () => {
                 .then(e => {
                     const path = getRedirect(e);
 
-                    // window.location.href = path;
+                    setTimeout(() => {
+                        router.push(path);
+                    }, 1000)
                 });
         } catch (err) {            
             if(Array.isArray(err?.response?.data?.errors)) {
@@ -126,7 +131,7 @@ const LoginForm = () => {
             <div className="mt-8 flex justify-center">
                 <button
                 type="submit"
-                className="flex items-center px-6 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition w-full justify-center"
+                className="flex items-center px-6 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition w-full justify-center cursor-pointer"
                 disabled={isSubmitting}
                 >
                 <FaSignInAlt className="mr-2" />

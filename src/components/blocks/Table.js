@@ -16,7 +16,8 @@ const DataTable = ({
     edited = true,
     showed = true,
     deleted = true,
-    added = true
+    added = true,
+    selected = true
 }) => {
     const [selectedItems, setSelectedItems] = useState([]);
     const [selectAll, setSelectAll] = useState(false);
@@ -63,8 +64,8 @@ const DataTable = ({
                 </div>
                 {selectedItems.length > 0 && (
                     <div className="flex items-center">
-                    <span className="bg-sky rounded-full w-3 h-3 mr-2"></span>
-                    <span>Selected: {selectedItems.length}</span>
+                        <span className="bg-sky rounded-full w-3 h-3 mr-2"></span>
+                        <span>Selected: {selectedItems.length}</span>
                     </div>
                 )}
                 </div>
@@ -81,8 +82,8 @@ const DataTable = ({
                 </button>
                 )}
                 {added && <button 
-                onClick={onAddNew}
-                className="flex items-center px-4 py-2 bg-sky hover:bg-[#5d4a8f] rounded-lg transition"
+                    onClick={onAddNew}
+                    className="flex items-center px-4 py-2 bg-sky hover:bg-[#5d4a8f] rounded-lg transition cursor-pointer"
                 >
                 <FaPlus className="mr-2" />
                     Add New
@@ -96,16 +97,16 @@ const DataTable = ({
             <table className="w-full">
             <thead>
                 <tr className="bg-skin">
-                <th className="p-4 w-12">
+                {selected && <th className="p-4 w-12">
                     <input
                     type="checkbox"
                     checked={selectAll}
                     onChange={toggleSelectAll}
                     className="h-4 w-4 text-main rounded focus:ring-main"
                     />
-                </th>
-                {columns.map((column) => (
-                    <th key={column.key} className="p-4 text-left text-main font-semibold">
+                </th>}
+                {columns.map((column, index) => (
+                    <th key={index} className="p-4 text-left text-main font-semibold">
                     {column.header}
                     </th>
                 ))}
@@ -122,17 +123,17 @@ const DataTable = ({
                 ) : (
                 items.map((item, id) => (
                     <tr 
-                    key={id} 
-                    className={`border-b ${selectedItems.includes(item.id) ? 'bg-sky/20' : ''}`}
+                        key={id} 
+                        className={`border-b ${selectedItems.includes(item.id) ? 'bg-sky/20' : ''}`}
                     >
-                    <td className="p-4">
+                    {selected && <td className="p-4">
                         <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => toggleItemSelection(item.id)}
-                        className="h-4 w-4 text-main rounded focus:ring-main"
+                            type="checkbox"
+                            checked={selectedItems.includes(item.id)}
+                            onChange={() => toggleItemSelection(item.id)}
+                            className="h-4 w-4 text-main rounded focus:ring-main"
                         />
-                    </td>
+                    </td>}
                     {columns?.map((column, id) => (
                         <td key={`${id}-${column.key}`} className="p-4 text-main">
                             {column.render ? column.render(item) : item[column.key]}
@@ -155,7 +156,7 @@ const DataTable = ({
                             <FaEdit />
                         </button>}
                         {deleted && <button 
-                            onClick={() => onDelete(item.id)}
+                            onClick={() => onDelete(item)}
                             className="p-2 text-red-500 hover:bg-red-500/20 rounded-full cursor-pointer"
                             title="Delete"
                         >

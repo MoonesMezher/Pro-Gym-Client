@@ -185,7 +185,7 @@ const SignupForm = () => {
             <div className="mt-8 flex justify-center">
                 <button
                 type="submit"
-                className="flex items-center px-6 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition w-full justify-center"
+                className="flex items-center px-6 py-3 bg-[#725CAD] hover:bg-[#5d4a8f] text-white rounded-lg transition w-full justify-center cursor-pointer"
                 disabled={isSubmitting}
                 >
                 <FaUserPlus className="mr-2" />

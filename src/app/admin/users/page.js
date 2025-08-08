@@ -27,7 +27,7 @@ const UsersPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             apiService.get(API.USERS.GET.ALL+`?page=${page}`)
-                .then(res => {
+                .then(res => {                    
                     setUsers(res.data.users.data)                    
                     setPaginate({
                         hasNextPage: res.data.users.hasNextPage,
@@ -66,14 +66,12 @@ const UsersPage = () => {
         { key: 'since', header: 'Since', render: (item) => `${item?.createdAt?.split("T")[0]}` },
     ];
 
-    const router = useRouter()
-
     // Action handlers
     const handleAddNew = () => {};
 
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this item?')) {
-        setUsers(users.filter(user => user.id !== id));
+            setUsers(users.filter(user => user.id !== id));
         }
     };
 
@@ -87,8 +85,10 @@ const UsersPage = () => {
         alert(`Edit user: ${item.name}\nThis would open an edit form`);
     };
 
+    const router = useRouter()
+
     const handleView = (item) => {
-        alert(`Viewing details for: ${item.name}`);
+        router.push(`/admin/users/${item._user._id}`)
     };
 
     return (
@@ -108,6 +108,7 @@ const UsersPage = () => {
                 edited={false}
                 deleted={false}
                 added={false}
+                selected={false}
             />
         </div>
     );

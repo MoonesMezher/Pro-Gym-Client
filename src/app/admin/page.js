@@ -77,7 +77,7 @@ export default function DashboardPage() {
                     <span className="text-white">🔔</span>
                 </div>
                 <div>
-                    <p className="font-medium">New order received</p>
+                    <p className="font-medium text-black">New order received</p>
                     <p className="text-sm text-gray-500">2 hours ago</p>
                 </div>
                 </li>

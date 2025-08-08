@@ -8,31 +8,33 @@ const API = {
     SECTIONS: {
         GET: {
             ALL: "/sections",
-            ONE: (id) => `/sections/${id}`
+            ONE: `/sections/`,
+            ALLWITHCOACHES: `/sections/coaches/`,
         },
         POST: {
             ADD: "/sections/add",
-            ADD_COACHES: (id) => `/sections/add/coaches/section/${id}`,
+            ADD_COACHES: `/sections/add/coaches/section/`,
             ADD_USER: (id) => `/sections/add/user/section/${id}`
         },
         PUT: {
-            UPDATE: (id) => `/sections/update/${id}`
+            UPDATE: `/sections/update/`
         },
         DELETE: {
             COACHES: (id) => `/sections/delete/coaches/section/${id}`,
             USER: (id) => `/sections/delete/user/section/${id}`,
             SUBS: (id) => `/sections/delete/user/${id}`,
-            ONE: (id) => `/sections/delete/${id}`
+            ONE: `/sections/delete/`
         }
     },
     USERS: {
         GET: {
             ALL: "/users",
-            COACH: (id) => `/users/coach/${id}`,
+            COACH: `/users/coach/`,
             BY_STATE: `/users/state`,
             BY_NAME: "/users/name",
-            ONE: (id) => `/users/${id}`,
-            ME: "/users/me"
+            ONE: `/users/`,
+            ME: "/users/me",
+            SUPERVISORS: "/users/supervisors"
         },
         POST: {
             LOGIN: "/users/login",
@@ -47,8 +49,8 @@ const API = {
             STATE: (id) => `/users/state/update/${id}`
         },
         DELETE: {
-            COACH: (id) => `/users/coach/delete/${id}`,
-            SUPERVISOR: (id) => `/users/supervisor/delete/${id}`
+            COACH: `/users/coach/delete/`,
+            SUPERVISOR: `/users/supervisor/delete/`
         }
     },
     UPLOADS: {
@@ -67,7 +69,10 @@ const API = {
     },
     LOGS: {
         GET: {
-            ALL: "/errors"
+            ALL: "/logs"
+        },
+        DELETE: {
+            CLEAR: "/logs"
         }
     },
     HOURS: {

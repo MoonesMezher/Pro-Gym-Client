@@ -6,26 +6,26 @@ import { useRouter } from 'next/navigation';
 import Head from '@/components/blocks/Head';
 import apiService from '@/apis/services';
 import API from '@/apis/init';
+import { toast } from '@/providers/ToastProvider';
 
 const SectionsPage = () => {
     // Sample data
-    const [sections, setSesections] = useState([]);  
-
+    const [sections, setSections] = useState([]);  
+    const [updated, setUpdated] = useState(false);      
+    
     useEffect(() => {
         const fetchData = async () => {
             apiService.get(API.SECTIONS.GET.ALL)
-                .then(res => {
-                    console.log(res.data);
-                    
-                    setSesections(res.data.sections)                    
-                })
-                .catch(err => {
-                    console.log(err);
-                })
+            .then(res => {                    
+                setSections(res.data.sections)                    
+            })
+            .catch(err => {
+                console.log(err);
+            })
         }
-
+        
         fetchData();
-    }, [])
+    }, [updated]);
 
     // Table columns configuration
     const userColumns = [
@@ -38,7 +38,7 @@ const SectionsPage = () => {
         },
         { key: 'title', header: 'Title', render: (item) => item.title },
         { key: 'rate', header: 'Rate', render: (item) => item.avgRate },
-        { key: 'prices', header: 'Prices', render: (item) => item.price.map(e => <div className='flex flex-row gap-1 text-sm'>
+        { key: 'prices', header: 'Prices', render: (item) => item.price.map((e, i) => <div key={i} className='flex flex-row gap-1 text-sm'>
             <span>{e.key} -</span>
             <span>{e.value}</span>
         </div>) },
@@ -52,24 +52,30 @@ const SectionsPage = () => {
         router.push("/admin/sections/add")
     };
 
-    const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this item?')) {
-            setSesections(sections.filter(user => user.id !== id));
-        }
+    const handleDelete = (item) => {
+        apiService.delete(API.SECTIONS.DELETE.ONE+item?._id)
+            .then(res => {
+                setUpdated(!updated)
+            })
+            .catch(err => {
+                toast.error("Error", {
+                    description: err?.response?.data?.message || "Error"
+                })
+            })
     };
 
     const handleBulkDelete = (ids) => {
         if (confirm(`Are you sure you want to delete ${ids.length} items?`)) {
-            setSesections(sections.filter(user => !ids.includes(user.id)));
+            setSections(sections.filter(user => !ids.includes(user.id)));
         }
     };
 
     const handleEdit = (item) => {
-        alert(`Edit user: ${item.name}\nThis would open an edit form`);
+        router.push("/admin/sections/edit/"+item._id)
     };
 
-    const handleView = (item) => {
-        alert(`Viewing details for: ${item.name}`);
+    const handleView = (item) => {        
+        router.push("/admin/sections/"+item._id)
     };
 
     return (
@@ -85,6 +91,7 @@ const SectionsPage = () => {
                 onEdit={handleEdit}
                 onView={handleView}
                 onBulkDelete={handleBulkDelete}
+                selected={false}
             />
         </div>
     );

@@ -10,8 +10,11 @@ import ProtectedRoute from '@/components/auth/protectedRoute';
 import { ROLES } from '@/utils/role';
 import useAuthStore from '@/store/auth.store';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePathname } from 'next/navigation';
 const AdminLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const pathname = usePathname();
 
     const data = useAuthStore(state => state.data)
 
@@ -23,11 +26,19 @@ const AdminLayout = ({ children }) => {
         justAdmin() && { name: 'Coaches', icon: <FaUserNinja className='text-skin text-xl'/>, href: '/admin/coaches' },
         { name: 'Schedules', icon: <FaBox className='text-skin text-xl'/>, href: '/admin/schedules' },
         justAdmin() && { name: 'Sections', icon: <IoMdGrid className='text-skin text-xl'/>, href: '/admin/sections' },
-        justAdmin() && { name: 'Messages', icon: <FaMessage className='text-skin text-xl'/>, href: '/admin/messages' },
+        justAdmin() && { name: 'Logs', icon: <FaMessage className='text-skin text-xl'/>, href: '/admin/logs' },
         { name: 'Settings', icon: <FaGear className='text-skin text-xl'/>, href: '/admin/settings' },
     ];
 
-    navItems = navItems.filter(e => e !== false)        
+    navItems = navItems.filter(e => e !== false);
+    
+    const handleLinks = (href) => {
+        if(href === "/admin") {
+            return pathname === href? "bg-sky": "";
+        } else {
+            return pathname.startsWith(href)? "bg-sky": "";
+        }
+    }
 
     return (
         <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPERVISOR]}>
@@ -53,7 +64,7 @@ const AdminLayout = ({ children }) => {
                 <ul>
                     {navItems?.map((item) => (
                     <li key={item?.name} className="mb-1">
-                        <Link href={item?.href} className={`flex items-center p-3 rounded-lg hover:bg-sky transition-all`}>
+                        <Link href={item?.href} className={`flex items-center p-3 rounded-lg hover:bg-sky transition-all ${handleLinks(item?.href)}`}>
                             {item?.icon}
                             <span className='ml-3'>{item?.name}</span>
                         </Link>

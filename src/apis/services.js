@@ -5,9 +5,15 @@ const apiService = {
     post: (url, data, config) => api.post(url, data, config),
     put: (url, data) => api.put(url, data),
     delete: url => api.delete(url),
-    postFile: (url, file) => {
+    postFile: (url, images) => {
         const formData = new FormData();
-        formData.append('file', file);
+
+        if (images) {
+            for (let i = 0; i < images.length; i++) {
+                formData.append('images', images[i]);
+            }
+        }
+        
         return api.post(url, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
