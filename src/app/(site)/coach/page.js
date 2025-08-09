@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import API from '@/apis/init';
 import apiService from '@/apis/services';
 
-const ProfilePage = () => {
+const CoachPage = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [images, setImages] = useState([]);
@@ -56,7 +56,7 @@ const ProfilePage = () => {
                         description: "Updated profile successfully"
                     })
                     
-                    window.location.pathname = "/profile"
+                    window.location.pathname = "/coach"
                 }
             })
             .catch(err => {                
@@ -137,7 +137,7 @@ const ProfilePage = () => {
     }
 
     return (
-        <ProtectedRoute allowedRoles={[ROLES.USER]}>
+        <ProtectedRoute allowedRoles={[ROLES.COACH]}>
             <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Header */}
             <div className="text-center mb-12 pt-24">
@@ -190,7 +190,7 @@ const ProfilePage = () => {
                         <h2 className="text-2xl font-bold text-white mt-4">{userData.name}</h2>
                         <div className="inline-flex items-center bg-[#FFE3A9] text-[#0B1D51] px-4 py-1 rounded-full mt-2">
                             <FaDumbbell className="mr-2" />
-                            <span>{userData.membership} Member</span>
+                            <span>{userData.membership} Coach</span>
                         </div>
                     </div>
                     
@@ -276,4 +276,4 @@ const ProfilePage = () => {
     );
 };
 
-export default ProfilePage;
+export default CoachPage;

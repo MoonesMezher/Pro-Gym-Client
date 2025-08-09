@@ -29,8 +29,19 @@ const LoginForm = () => {
                     const path = getRedirect(e);
 
                     setTimeout(() => {
-                        router.push(path);
+                        window.location.pathname = path;
                     }, 1000)
+                })
+                .catch(err => {
+                    if(Array.isArray(err?.response?.data?.errors)) {
+                        toast.error("Error", {
+                            description: err?.response?.data?.errors[0]
+                        })
+                    } else {
+                        toast.error("Error", {
+                            description: err?.response?.data?.message || "Error"
+                        })
+                    }
                 });
         } catch (err) {            
             if(Array.isArray(err?.response?.data?.errors)) {

@@ -10,18 +10,19 @@ const API = {
             ALL: "/sections",
             ONE: `/sections/`,
             ALLWITHCOACHES: `/sections/coaches/`,
+            ALLWITHUSERS: `/sections/users/`,
         },
         POST: {
             ADD: "/sections/add",
             ADD_COACHES: `/sections/add/coaches/section/`,
-            ADD_USER: (id) => `/sections/add/user/section/${id}`
+            DELETE_COACHES: `/sections/delete/coaches/section/`,
+            DELETE_USER: `/sections/delete/user/section/`,
+            ADD_USER: `/sections/add/user/section/`
         },
         PUT: {
             UPDATE: `/sections/update/`
         },
         DELETE: {
-            COACHES: (id) => `/sections/delete/coaches/section/${id}`,
-            USER: (id) => `/sections/delete/user/section/${id}`,
             SUBS: (id) => `/sections/delete/user/${id}`,
             ONE: `/sections/delete/`
         }
@@ -60,7 +61,7 @@ const API = {
     },
     RATES: {
         POST: {
-            ADD: (id) => `/rates/section/${id}`
+            ADD: `/rates/section/`
         },
         DELETE: {
             BY_ADMIN: (id) => `/rates/auth/${id}`,
@@ -91,13 +92,13 @@ const API = {
             ALL: "/schedules"
         },
         POST: {
-            ADD: (id) => `/schedules/${id}`
+            ADD: `/schedules/`
         },
         PUT: {
-            UPDATE:(id) => `/schedules/${id}`
+            UPDATE:`/schedules/`
         },
         DELETE: {
-            ONE: (id) => `/schedules/${id}`
+            ONE: `/schedules/`
         }
     }
 };

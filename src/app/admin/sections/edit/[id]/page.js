@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 const Update = () => {    
     const [images, setImages] = useState([]);
     const [section, setSection] = useState();
+    const [initialData, setInitialData] = useState([]);
 
     const params = useParams();
 
@@ -18,7 +19,7 @@ const Update = () => {
             apiService.get(API.SECTIONS.GET.ONE+params.id)
                 .then(res => {                                 
                     setSection(res?.data?.data?.section)                    
-                    console.log(res.data.data?.section);
+                    setInitialData(res?.data?.data?.section?.images)
                 })
                 .catch(err => {
                     console.log(err);
@@ -57,20 +58,15 @@ const Update = () => {
             fullWidth: true,
             label: "Images",
             accept: "image/*",
-            initialData: section?.images
+            initialData: initialData,
+            setInitialData: setInitialData
         },
         {
             type: "keyValueArray",
-            required: true,
             name: "price",
             fullWidth: true,
             label: "Pricing",
-            value: section?.price,
-            validation: {
-                validate: (value) => 
-                    value.every(item => item.key && item.value) || 
-                    "All key-value pairs must be filled"
-            }
+            value: section?.price
         }
     ];
 
@@ -79,11 +75,11 @@ const Update = () => {
     const handleSubmit = (data) => {     
         const processedData = {
             ...data,
-            images,
-            price: data.price.map(item => ({
+            images: [...images, ...initialData],
+            price: data.price ? data.price.map(item => ({
                 key: item.key,
                 value: item.value
-            }))
+            })): []
         };
         
         apiService.put(API.SECTIONS.PUT.UPDATE+params.id, processedData)

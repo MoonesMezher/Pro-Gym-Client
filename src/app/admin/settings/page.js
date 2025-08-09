@@ -102,7 +102,7 @@ const SettingsPage = () => {
             {/* Page Header */}
             <div className="bg-white rounded-xl shadow-lg p-6">
             <h1 className="text-3xl font-bold text-[#0B1D51]">Settings</h1>
-            <p className="text-a[#725CAD] mt-2">Manage your account and system preferences</p>
+            <p className="text-a[#725CAD] mt-2 text-black">Manage your account and system preferences</p>
             </div>
 
             {/* Main Settings Grid */}

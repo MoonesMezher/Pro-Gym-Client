@@ -38,10 +38,7 @@ const Form = ({
         // Set value for react-hook-form
         setFilePreviews([]);
 
-        const filesArray = Array.from(files)
-
-        console.log(11, filesArray);
-        
+        const filesArray = Array.from(files)        
 
         onFileSubmit(filesArray)
         
@@ -79,11 +76,15 @@ const Form = ({
         if (onCancel) onCancel();
     };
 
+    const handleDeleteFile = (field, file) => {        
+        field.setInitialData(field.initialData.filter(e => e !== file))
+    }
+
     return (
         <div className={`bg-white rounded-xl shadow-lg overflow-hidden ${showBorder ? 'border border-[#725CAD]/20' : ''} ${formWidth === 'full' ? 'w-full' : 'max-w-3xl mx-auto'}`}>
         {showHeader && (
             <div className="bg-[#0B1D51] p-6">
-            <h2 className="text-2xl font-bold text-white">{title}</h2>
+                <h2 className="text-2xl font-bold text-white">{title}</h2>
             </div>
         )}
         
@@ -135,7 +136,7 @@ const Form = ({
                         disabled={isSubmitting}
                     >
                     <option value="" className='text-black'>Select {field.label}</option>
-                    {field.options.map((option) => (
+                    {field?.options?.map((option) => (
                         <option key={option.value} value={option.value} className='text-black'>
                             {option.label}
                         </option>
@@ -163,7 +164,7 @@ const Form = ({
                         <input
                             id={field.name}
                             type="file"
-                            multiple={true}
+                            multiple={field.multiple}
                             className="hidden"
                             accept={field.accept}
                             onChange={(e) => handleFileChange(e, field.name)}
@@ -192,14 +193,23 @@ const Form = ({
 
                     
                     {/* Existing file */}
-                    {initialData && initialData?.length > 0 && <h3 className="text-sm font-medium text-[#0B1D51] my-2">Current:</h3>}
+                    {field.initialData && field.initialData?.length > 0 && <h3 className="text-sm font-medium text-[#0B1D51] my-2">Current:</h3>}
                     <div className="grid grid-cols-3 gap-2 w-full mt-4">
-                    {initialData && initialData?.length > 0 && initialData?.map((file,i) => <img 
+                        {field.initialData && field.initialData?.length > 0 && field.initialData?.map((file,i) => 
+                        <div
                             key={i}
-                            src={"http://localhost:4000/"+file} 
-                            alt={`Current ${i + 1}`} 
-                            className="max-w-xs max-h-40 rounded-lg border border-[#725CAD]/20 w-full h-full object-cover"
-                        />)}
+                            className="relative max-w-xs max-h-40 rounded-lg border border-[#725CAD]/20 object-cover"
+                        >
+                            <img 
+                                src={"http://localhost:4000/"+file} 
+                                alt={`Current ${i + 1}`} 
+                                className='w-full h-full object-cover rounded-lg'
+                            />
+                            <span 
+                                className='absolute right-[-5px] top-[-5px] bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center cursor-pointer border-1 border-purple'
+                                onClick={() => handleDeleteFile(field, file)}
+                            >x</span>
+                        </div>)}
                     </div>
                     </div>
                 )}
@@ -217,6 +227,25 @@ const Form = ({
                     <label htmlFor={field.name} className="ml-2 block text-sm text-[#0B1D51]">
                         {field.label + ""}
                     </label>
+                    </div>
+                )}
+
+                {/* Checkbox */}
+                {field.type === 'search' && (
+                    <div className="flex items-center flex-col">
+                    <input
+                        id={field.name}
+                        type={"search"}
+                        className={`w-full p-3 border ${errors[field.name] ? 'border-red-500' : 'border-[#725CAD]/30'} rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent`}
+                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                        defaultValue={field?.value}
+                        {...register(field.name, field.validation)}
+                        onChange={field?.onSearch}
+                        disabled={isSubmitting}
+                    />
+                        {field?.results?.length > 0 && <div className='flex flex-col gap-1 mt-4 w-full'>
+                            {field?.results.map(field.showRender)}
+                        </div>}
                     </div>
                 )}
 

@@ -1,94 +1,188 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DataTable from '@/components/blocks/Table';
-import { FaCheck } from 'react-icons/fa6';
-import { FaTimes } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 import Head from '@/components/blocks/Head';
+import apiService from '@/apis/services';
+import API from '@/apis/init';
+import { toast } from '@/providers/ToastProvider';
+import Form from '@/components/blocks/Form';
 
 const SchedulesPage = () => {
     // Sample data
-    const [products, setProducts] = useState([
-        { id: 1, name: 'Protein Powder', category: 'Supplements', stock: 42, price: 49.99, status: 'In Stock' },
-        { id: 2, name: 'Weightlifting Gloves', category: 'Accessories', stock: 15, price: 24.99, status: 'Low Stock' },
-        { id: 3, name: 'Resistance Bands', category: 'Equipment', stock: 0, price: 34.99, status: 'Out of Stock' },
-        { id: 4, name: 'Yoga Mat', category: 'Equipment', stock: 28, price: 29.99, status: 'In Stock' },
-        { id: 5, name: 'Water Bottle', category: 'Accessories', stock: 67, price: 19.99, status: 'In Stock' },
-    ]);
+    const [schedules, setSchedules] = useState([]);  
+    const [updated, setUpdated] = useState(false);      
+    const [results, setResults] = useState([]);      
+    const [name, setName] = useState("");      
+    const [data, setData] = useState(null);      
+    const [state, setState] = useState(null);      
+    
+    useEffect(() => {
+        const fetchData = async () => {
+            const query = state ? `?state=${state}` : "";
+
+            console.log(query);
+            
+
+            apiService.get(API.SCHEDULES.GET.ALL+query)
+            .then(res => {                    
+                setSchedules(res.data.data)                    
+            })
+            .catch(err => {
+                console.log(err);
+            })
+        }
+        
+        fetchData();
+    }, [updated, state]);
+
+    const handleClose = (scheduleId) => {
+        apiService.put(API.SCHEDULES.PUT.UPDATE+scheduleId)
+            .then(res => {                    
+                setUpdated(!updated)                    
+            })
+            .catch(err => {
+                console.log(err);
+            })
+    }
 
     // Table columns configuration
-    const productColumns = [
-        { key: 'name', header: 'Product Name' },
-        { key: 'category', header: 'Category' },
-        { key: 'price', header: 'Price', render: (item) => `$${item.price.toFixed(2)}` },
-        { 
-        key: 'stock', 
-        header: 'Stock', 
-        render: (item) => (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            item.stock === 0 ? 'bg-red-100 text-red-800' : 
-            item.stock < 20 ? 'bg-yellow-100 text-yellow-800' : 
-            'bg-green-100 text-green-800'
-            }`}>
-            {item.stock} {item.stock === 0 ? 'Out of Stock' : item.stock < 20 ? 'Low Stock' : 'In Stock'}
-            </span>
-        ) 
-        },
-        { 
-        key: 'status', 
-        header: 'Status',
-        render: (item) => (
-            <span className={`inline-flex items-center ${
-            item.status === 'In Stock' ? 'text-green-600' : 
-            item.status === 'Low Stock' ? 'text-yellow-600' : 
-            'text-red-600'
-            }`}>
-            {item.status === 'In Stock' ? <FaCheck className="mr-1" /> : <FaTimes className="mr-1" />}
-            {item.status}
-            </span>
-        )
-        },
+    const userColumns = [
+        { key: 'name', header: 'Name', render: (item) => item._user.name },
+        { key: 'email', header: 'Email', render: (item) => item._user.email },
+        { key: 'state', header: 'State', render: (item) => <div className={`w-[20px] h-[20px] flex justify-center items-center rounded-full ${item.state === "on"? "bg-green-500": "bg-red-500"}`}></div> },
+        { key: 'leaved', header: 'Leaved', render: (item) => `${item.leave? item.leave.split(".")[0]: "In Progress"}` },
+        { key: "close", header: "Close", render: (item) => item.state === "on"?<div className='p-2 bg-red-500 text-white cursor-pointer rounded-md w-fit hover:opacity-50 duration-300' onClick={() => handleClose(item._id)}>Close</div>: "Closed" }
     ];
 
+    const router = useRouter()
+
     // Action handlers
-    const handleAddNew = () => {
-        alert('Add new product functionality would open a form here');
+    const handleAddNew = () => {        
+        apiService.post(API.SCHEDULES.POST.ADD+data)
+            .then(e => {                
+                if(e.status === 200) {
+                    setUpdated(!updated)
+                    setData(null)
+                    setResults([])
+                }
+            })
+            .catch(err => {
+                if(Array.isArray(err?.response?.data?.errors)) {
+                    toast.error("Error", {
+                        description: err?.response?.data?.errors[0]
+                    })
+                } else {
+                    toast.error("Error", {
+                        description: err?.response?.data?.message || "Error"
+                    })
+                }
+            })
     };
 
-    const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this item?')) {
-        setProducts(products.filter(product => product.id !== id));
-        }
+    const handleDelete = (item) => {
+        apiService.delete(API.SCHEDULES.DELETE.ONE+item?._id)
+            .then(res => {
+                setUpdated(!updated)
+            })
+            .catch(err => {
+                toast.error("Error", {
+                    description: err?.response?.data?.message || "Error"
+                })
+            })
     };
 
     const handleBulkDelete = (ids) => {
         if (confirm(`Are you sure you want to delete ${ids.length} items?`)) {
-            setProducts(products.filter(product => !ids.includes(product.id)));
+            setSchedules(schedules.filter(user => !ids.includes(user.id)));
         }
     };
 
     const handleEdit = (item) => {
-        alert(`Edit product: ${item.name}\nThis would open an edit form`);
+        router.push("/admin/schedules/edit/"+item._id)
     };
 
-    const handleView = (item) => {
-        alert(`Viewing details for: ${item.name}`);
+    const handleView = (item) => {        
+        router.push("/admin/schedules/"+item._id)
     };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            apiService.get(API.USERS.GET.BY_NAME+`?name=${name}`)
+            .then(res => {                    
+                setResults(res.data.users)                    
+            })
+            .catch(err => {
+                console.log(err);
+            })
+        }
+        
+        fetchData();
+    }, [name])
+
+    const fields = [
+        {
+            type: "search",
+            required: true,
+            name: "user",
+            fullWidth: true,
+            label: "User",
+            placeholder: "Search",
+            results: results,
+            value: "",
+            onSearch: (e) => setName(e.target.value),
+            showRender: (e, i) => <div 
+                key={i} 
+                className={`border-1 border-black rounded-md p-2 w-full text-black cursor-pointer duration-300 ${e._user._id === data? "bg-main text-white": "bg-white hover:bg-[#ddd]"}`}
+                onClick={() => setData(e._user._id)}
+            >
+                {e._user.name} <small>"{e._user.email}"</small>
+            </div>,
+            validation: ""
+        }
+    ]
 
     return (
         <div className="space-y-6">
-        <Head />
-        
-        <DataTable
-            title="Product Inventory"
-            items={products}
-            columns={productColumns}
-            onAddNew={handleAddNew}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            onView={handleView}
-            onBulkDelete={handleBulkDelete}
-        />
+            <Head title='Schedules list' desc="Welcome back, Admin! Here's an overview of your schedules."/>
+            <Form
+                fields={fields}
+                cancelButton={false}
+                onSubmit={handleAddNew}
+                title={'Add New Schedule'}
+                showBorder={true}
+                showHeader={true}
+                submitText={"Add"}
+            />
+
+            <div className='bg-white w-fit p-2 rounded-[10px] flex gap-1 items-center'>
+                <span className='text-black font-bold'>Filter By:</span>
+                <select
+                        id={"state"}
+                        className={`w-[100px] p-3 border 'border-[#725CAD]/30 rounded-lg focus:ring-2 focus:ring-[#725CAD] focus:border-transparent text-black placeholder:text-black cursor-pointer`}
+                        onChange={(e) => setState(e.target.value)}                
+                >
+                {["all", "on", "off"].map((option, i) => (
+                    <option key={i} value={option} className='text-black capitalize' >
+                        {option}
+                    </option>))}
+                </select>
+            </div>
+            
+            <DataTable
+                title="Schedules List"
+                items={schedules}
+                columns={userColumns}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onView={handleView}
+                onBulkDelete={handleBulkDelete}
+                added={false}
+                selected={false}
+                showed={false}
+                edited={false}
+            />
         </div>
     );
 };

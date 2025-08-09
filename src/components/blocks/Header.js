@@ -50,7 +50,7 @@ const Header = () => {
                     {user
                     ? ((user === "admin" || user === "supervisor") ? <Link href="/admin" className="text-sm/6 font-semibold text-white hover:text-skin">
                         Dashboard <span aria-hidden="true">&rarr;</span>
-                    </Link>:<Link href="/profile" className="text-sm/6 font-semibold text-white hover:text-skin">
+                    </Link>:<Link href={user === "coach"? "/coach":"/profile"} className="text-sm/6 font-semibold text-white hover:text-skin">
                         Profile <span aria-hidden="true">&rarr;</span>
                     </Link>)
                     : (<Link href="/auth/login" className="text-sm/6 font-semibold text-white hover:text-skin">

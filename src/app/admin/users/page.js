@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import DataTable from '@/components/blocks/Table';
-import { FaCheck } from 'react-icons/fa6';
-import { FaTimes } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import Head from '@/components/blocks/Head';
 import apiService from '@/apis/services';
@@ -26,9 +24,10 @@ const UsersPage = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            apiService.get(API.USERS.GET.ALL+`?page=${page}`)
+            apiService.get(API.USERS.GET.ALL+`?page=${page}?`)
                 .then(res => {                    
-                    setUsers(res.data.users.data)                    
+                    setUsers(res.data.users.data.filter(e => e._user.role === "user"))           
+                    
                     setPaginate({
                         hasNextPage: res.data.users.hasNextPage,
                         hasPrevPage: res.data.users.hasPrevPage,

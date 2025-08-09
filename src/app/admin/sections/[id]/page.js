@@ -29,7 +29,7 @@ const SectionPage = () => {
         <div className="">
             <div className="space-y-4">
                 <div className="flex gap-2 flex-wrap">
-                    {data?.section?.images && data?.section?.images.map(e => <div className="w-[150px] h-[150px] rounded-[10px] border-2 overflow-hidden border-black">
+                    {data?.section?.images && data?.section?.images.map((e, i) => <div key={i} className="w-[150px] h-[150px] rounded-[10px] border-2 overflow-hidden border-black">
                         <img 
                             src={`http://localhost:4000/${e}`} 
                             alt={`${e} Section Photo`} 
@@ -49,7 +49,7 @@ const SectionPage = () => {
                     <h3 className="text-sm font-medium text-purple">PRICING</h3>
                     <div>
                         {data?.section?.price.length > 0 && 
-                        data?.section?.price.map(e => <p className="text-lg text-black">{e.key}: {e.value}</p>)}
+                        data?.section?.price.map((e, i) => <p key={i} className="text-lg text-black">{e.key}: {e.value}</p>)}
                     </div>
                 </div>
                 <div>

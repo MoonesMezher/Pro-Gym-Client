@@ -36,7 +36,8 @@ const Add = () => {
             name: "images",
             fullWidth: true,
             label: "Images",
-            accept: "image/*"
+            accept: "image/*",
+            multiple: true
         },
         {
             type: "keyValueArray",
@@ -96,9 +97,7 @@ const Add = () => {
                     setImages(res.data.images)
                 }
             })
-            .catch(err => {
-                //console.log(err);
-                
+            .catch(err => {                
                 if(Array.isArray(err?.response?.data?.errors)) {
                     toast.error("Error", {
                         description: err?.response?.data?.errors[0]
