@@ -256,7 +256,7 @@ const Form = ({
                         register={register}
                         setValue={setValue}
                         errors={errors}
-                        initialData={field.value}
+                          initialData={field.value ?? [{ key: "", value: "" }]}
                         isSubmitting={isSubmitting}
                     />
                 )}
